@@ -1,0 +1,51 @@
+@RestResource(urlMapping='/v2/Contacts/*')
+global with sharing class ContactsCRUD {
+
+       @HttpPost
+global static ID createContact(String contactPhoneNumber, String contactEmail, String contactFirstName, String contactLastName) {
+        Contact thisContact = new Contact(Phone=contactPhoneNumber, Email=contactEmail, Department=contactFirstName, LastName=contactLastName);
+    insert thisContact;
+        return thisContact.Id;
+    } 
+
+       @HttpGet
+    global static Contact getContactById() {
+        RestRequest request = RestContext.request;
+        // grab the caseId from the end of the URL
+        String contactId = request.requestURI.substring(
+          request.requestURI.lastIndexOf('/')+1);
+        Contact result =  [SELECT Phone,Email,FirstName,LastName
+                        FROM Contact
+                        WHERE Id = :contactId];
+        return result;
+    }
+    
+  
+    @HttpPatch
+    global static ID updateContactFields() {
+        RestRequest request = RestContext.request;
+        String contactId = request.requestURI.substring(
+            request.requestURI.lastIndexOf('/')+1);
+        Contact thisContact = [SELECT Id FROM Contact WHERE Id = :contactId];        
+        Map<String, Object> params = (Map<String, Object>)JSON.deserializeUntyped(request.requestbody.tostring());
+     
+        for(String fieldName : params.keySet()) {
+          
+            thisContact.put(fieldName, params.get(fieldName));
+        }
+        update thisContact;
+        return thisContact.Id;
+    }  
+
+
+    @HttpDelete
+    global static void deleteContact() {
+        RestRequest request = RestContext.request;
+        String contactId = request.requestURI.substring(
+            request.requestURI.lastIndexOf('/')+1);
+        Contact thisContact = [SELECT Id FROM Contact WHERE Id = :ContactId];
+        delete thisContact;
+    }   
+
+    
+}
